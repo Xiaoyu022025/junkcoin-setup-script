@@ -1,0 +1,1 @@
+# junkcoin-setup-script
