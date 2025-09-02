@@ -11,7 +11,7 @@
 
 2) 直接运行：
 ```bash
-python3 monitor_bonk_fun_pools.py --mints <MINT1> <MINT2> --interval 5 --min-sol-liq 5 --sort fdv
+python3 monitor_bonk_fun_pools.py --mints <MINT1> <MINT2> --interval 5 --min-sol-liq 5 --sort fdv --dex pumpswap
 ```
 
 参数说明：
@@ -20,15 +20,16 @@ python3 monitor_bonk_fun_pools.py --mints <MINT1> <MINT2> --interval 5 --min-sol
 - `--min-sol-liq`: 仅显示 SOL 数量不小于该值的底池
 - `--sort`: 排序字段，可选：price, fdv, solLiq, usdLiq, volume24h
 - `--json`: 以 JSON 行输出，方便管道处理
+ - `--dex`: 仅展示指定 DEX（默认 `pumpswap`，代表 bonk.fun/pump 风格；传 `any` 关闭过滤）
 
 示例（只查询一次，显示人类可读信息）：
 ```bash
-python3 monitor_bonk_fun_pools.py --mints <MINT1> <MINT2> --min-sol-liq 3 --sort volume24h
+python3 monitor_bonk_fun_pools.py --mints <MINT1> <MINT2> --min-sol-liq 3 --sort volume24h --dex pumpswap
 ```
 
 示例（持续轮询并输出 JSON，适合日志采集对接）：
 ```bash
-python3 monitor_bonk_fun_pools.py --mints <MINT1> --interval 10 --json | jq '.'
+python3 monitor_bonk_fun_pools.py --mints <MINT1> --interval 10 --dex pumpswap --json | jq '.'
 ```
 
 #### 工作原理

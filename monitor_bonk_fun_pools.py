@@ -14,7 +14,7 @@
 
 用法示例：
   python3 monitor_bonk_fun_pools.py --mints <MINT_ADDRESS> [<MINT_ADDRESS> ...] \
-      --interval 5 --min-sol-liq 5 --sort fdv
+      --interval 5 --min-sol-liq 5 --sort fdv --dex pumpswap
 
 参数说明：
 - --mints: 一个或多个代币的 Mint 地址
@@ -22,6 +22,7 @@
 - --min-sol-liq: 仅显示底池中 SOL 数量大于等于该阈值的交易对
 - --sort: 排序字段，可选: price, fdv, solLiq, usdLiq, volume24h
 - --json: 以 JSON 行打印，方便程序对接
+ - --dex: 仅展示指定 DEX 的交易对。默认 pumpswap（bonk.fun / pump 风格）。传 any 关闭过滤
 
 注意：
 - DexScreener 数据聚合了 Raydium、Meteora、Orca、Pump 等，足够用来观察 SOL 底池
@@ -243,10 +244,13 @@ def run_once(
     min_sol_liq: float,
     sort_key: str,
     as_json: bool,
+    dex_filter: Optional[str],
 ) -> None:
     for mint in mints:
         all_pairs = fetch_pairs_for_token(mint)
         sol_pairs = filter_sol_quote_pairs(all_pairs)
+        if dex_filter and dex_filter.lower() != "any":
+            sol_pairs = [p for p in sol_pairs if (p.dex_id or "").lower() == dex_filter.lower()]
         sol_pairs = [p for p in sol_pairs if p.sol_liquidity >= min_sol_liq]
         sol_pairs = sort_pairs(sol_pairs, sort_key)
         if as_json:
@@ -268,6 +272,7 @@ def main() -> None:
         help="排序字段",
     )
     parser.add_argument("--json", action="store_true", help="以 JSON 行输出，便于程序对接")
+    parser.add_argument("--dex", type=str, default="pumpswap", help="仅展示指定 DEX（默认 pumpswap；传 any 关闭过滤）")
     args = parser.parse_args()
 
     if args.interval and args.interval < 0:
@@ -275,13 +280,13 @@ def main() -> None:
         sys.exit(2)
 
     if args.interval == 0:
-        run_once(args.mints, args.min_sol_liq, args.sort, args.json)
+        run_once(args.mints, args.min_sol_liq, args.sort, args.json, args.dex)
         return
 
     # 连续模式
     try:
         while True:
-            run_once(args.mints, args.min_sol_liq, args.sort, args.json)
+            run_once(args.mints, args.min_sol_liq, args.sort, args.json, args.dex)
             if not args.json:
                 print(f"\n[info] 下一次刷新将在 {args.interval}s 后……")
             time.sleep(args.interval)
